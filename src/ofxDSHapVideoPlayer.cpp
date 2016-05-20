@@ -1412,18 +1412,17 @@ void ofxDSHapVideoPlayer::writeToTexture(ofTexture &texture) {
 };
 
 
-
-
-void ofxDSHapVideoPlayer::draw(float x, float y){
+void ofxDSHapVideoPlayer::draw(int x, int y, int w, int h){
 
 	ofSetColor(255);
 
 	if (textureFormat == HapTextureFormat_YCoCg_DXT5) shader.begin();
 
-	tex.draw(x, y);
+	tex.draw(x, y, w, h);
 
 	if (textureFormat == HapTextureFormat_YCoCg_DXT5) shader.end();
 }
+
 
 void ofxDSHapVideoPlayer::play(){
 	if( player && player->isLoaded() ){
