@@ -1,4 +1,3 @@
-
 //ofxDSHapVideoPlayer written by Jeremy Rotsztain and Philippe Laurheret for Second Story, 2015
 //DirectShowVideo and ofDirectShowPlayer written by Theodore Watson, Jan 2014
 //See the cpp file for the DirectShow implementation 
@@ -29,11 +28,11 @@ class ofxDSHapVideoPlayer : public ofBaseVideoPlayer {
 		 void				play();
 		 void				pause();
 		 void				stop();		
-	
-		 bool 				isFrameNew();
-		 unsigned char * 	getPixels(); // @NOTE: return uncompressed pixels
-	     ofPixelsRef		getPixelsRef();
-	
+		
+		 bool               isFrameNew();
+         unsigned char *    getPixels(); // @NOTE: return uncompressed pixels
+         ofPixelsRef        getPixelsRef();
+
 		 float 				getWidth();
 		 float 				getHeight();
 	
@@ -45,7 +44,6 @@ class ofxDSHapVideoPlayer : public ofBaseVideoPlayer {
 		 ofPixelFormat 		getPixelFormat();
          ofShader           getShader();
          ofTexture *        getTexture();
-
 
 		 float 				getPosition();
 		 float 				getSpeed();

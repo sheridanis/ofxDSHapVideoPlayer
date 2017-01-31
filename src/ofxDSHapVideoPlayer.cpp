@@ -17,6 +17,7 @@
 #include "DSShared.h"
 #include "DSUncompressedSampleGrabber.h"
 #include "snappy-c.h"
+#include "ofxXmlSettings.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -49,6 +50,18 @@ static void releaseCom(){
 }
 
 class DirectShowHapVideo : public ISampleGrabberCB {
+//270117 TMS: Vars for holding the audio render device names
+private:
+	string  SoundRender1_2Name;
+	string  SoundRender3_4Name;
+	string  SoundRender5_6Name;
+	string  SoundRender7_8Name;
+	string  SoundRender9_10Name;
+	string  SoundRender11_12Name;
+	string  SoundRender13_14Name;
+	string  SoundRender15_16Name;
+	string  SoundRender17_18Name;
+
 	public:
 
 	DirectShowHapVideo(){
@@ -92,7 +105,45 @@ class DirectShowHapVideo : public ISampleGrabberCB {
 			this->filterGraphManager->RemoveFilter(this->asyncReaderFilter);
 			this->filterGraphManager->RemoveFilter(this->rawSampleGrabberFilter);
 			this->filterGraphManager->RemoveFilter(this->nullRendererFilter);
-            this->filterGraphManager->RemoveFilter(this->audioRendererFilter);
+			//270117 TMS: Added for multiple audio channels support - interted in try-catch in case where the filters are not used
+			try{
+				this->filterGraphManager->RemoveFilter(this->audioRendererFilter1_2);
+			}
+			catch (exception) {}            
+			try {
+				this->filterGraphManager->RemoveFilter(this->audioRendererFilter3_4);
+			}
+			catch (exception) {}
+			try {
+				this->filterGraphManager->RemoveFilter(this->audioRendererFilter5_6);
+			}
+			catch (exception) {}
+			try {
+				this->filterGraphManager->RemoveFilter(this->audioRendererFilter7_8);
+			}
+			catch (exception) {}
+			try {
+				this->filterGraphManager->RemoveFilter(this->audioRendererFilter9_10);
+			}
+			catch (exception) {}
+			try {
+				this->filterGraphManager->RemoveFilter(this->audioRendererFilter11_12);
+			}
+			catch (exception) {}
+			try {
+				this->filterGraphManager->RemoveFilter(this->audioRendererFilter13_14);
+			}
+			catch (exception) {}
+			try {
+				this->filterGraphManager->RemoveFilter(this->audioRendererFilter15_16);
+			}
+			catch (exception) {}
+			try {
+				this->filterGraphManager->RemoveFilter(this->audioRendererFilter17_18);
+			}
+			catch (exception) {}
+
+
 			filterGraphManager->Release();
 		}
 		if (aviSplitterFilter){
@@ -104,9 +155,35 @@ class DirectShowHapVideo : public ISampleGrabberCB {
 		if (nullRendererFilter){
 			nullRendererFilter->Release();
 		}
-		if (audioRendererFilter){
-			audioRendererFilter->Release();
+		//270117 TMS: Added for support of the multiple audio channels
+		if (audioRendererFilter1_2){
+			audioRendererFilter1_2->Release();
 		}
+		if (audioRendererFilter3_4) {
+			audioRendererFilter3_4->Release();
+		}
+		if (audioRendererFilter5_6) {
+			audioRendererFilter5_6->Release();
+		}
+		if (audioRendererFilter7_8) {
+			audioRendererFilter7_8->Release();
+		}
+		if (audioRendererFilter9_10) {
+			audioRendererFilter9_10->Release();
+		}
+		if (audioRendererFilter11_12) {
+			audioRendererFilter11_12->Release();
+		}
+		if (audioRendererFilter13_14) {
+			audioRendererFilter13_14->Release();
+		}
+		if (audioRendererFilter15_16) {
+			audioRendererFilter15_16->Release();
+		}
+		if (audioRendererFilter17_18) {
+			audioRendererFilter17_18->Release();
+		}
+
 		if (rawSampleGrabberFilter){
 			rawSampleGrabberFilter->SetCallback(NULL, 0);
 			rawSampleGrabberFilter->Release();
@@ -115,6 +192,37 @@ class DirectShowHapVideo : public ISampleGrabberCB {
 			delete[] rawBuffer;
 		}
 		clearValues(); 
+	}
+
+	//270117 TMS: Setting file for loading the settings
+	void GetAudioRenderSettings()
+	{
+		ofxXmlSettings AudioRenderSettings;
+		if (!AudioRenderSettings.loadFile("AudioRenders.xml"))
+		{ //The settings file don't exist - create a new one, using standard settings
+			cout << "Audio render settings file don't exist - creating a default settings file\r\n";
+			AudioRenderSettings.setValue("SoundRender1_2Name", "Default DirectSound Device", 0);
+			AudioRenderSettings.setValue("SoundRender3_4Name", "Default DirectSound Device", 0);
+			AudioRenderSettings.setValue("SoundRender5_6Name", "Default DirectSound Device", 0);
+			AudioRenderSettings.setValue("SoundRender7_8Name", "Default DirectSound Device", 0);
+			AudioRenderSettings.setValue("SoundRender9_10Name", "Default DirectSound Device", 0);
+			AudioRenderSettings.setValue("SoundRender11_12Name", "Default DirectSound Device", 0);
+			AudioRenderSettings.setValue("SoundRender13_14Name", "Default DirectSound Device", 0);
+			AudioRenderSettings.setValue("SoundRender15_16Name", "Default DirectSound Device", 0);
+			AudioRenderSettings.setValue("SoundRender17_18Name", "Default DirectSound Device", 0);
+
+			AudioRenderSettings.saveFile();
+		}
+
+		SoundRender1_2Name = AudioRenderSettings.getValue("SoundRender1_2Name", "Default DirectSound Device", 0)+ '\0';
+		SoundRender3_4Name = AudioRenderSettings.getValue("SoundRender3_4Name", "Default DirectSound Device", 0);
+		SoundRender5_6Name = AudioRenderSettings.getValue("SoundRender5_6Name", "Default DirectSound Device", 0);
+		SoundRender7_8Name = AudioRenderSettings.getValue("SoundRender7_8Name", "Default DirectSound Device", 0);
+		SoundRender9_10Name = AudioRenderSettings.getValue("SoundRender9_10Name", "Default DirectSound Device", 0);
+		SoundRender11_12Name = AudioRenderSettings.getValue("SoundRender11_12Name", "Default DirectSound Device", 0);
+		SoundRender13_14Name = AudioRenderSettings.getValue("SoundRender13_14Name", "Default DirectSound Device", 0);
+		SoundRender15_16Name = AudioRenderSettings.getValue("SoundRender15_16Name", "Default DirectSound Device", 0);
+		SoundRender17_18Name = AudioRenderSettings.getValue("SoundRender17_18Name", "Default DirectSound Device", 0);
 	}
 
 	void clearValues(){
@@ -137,7 +245,19 @@ class DirectShowHapVideo : public ISampleGrabberCB {
 		asyncReaderFilter = NULL;
 		asyncReaderFilterInterface = NULL;
 		aviSplitterFilter = NULL;
-		audioRendererFilter = NULL;
+		//270117 TMS: Added for support of multiple audio channels
+		audioRendererFilter1_2 = NULL;
+		audioRendererFilter3_4 = NULL;
+		audioRendererFilter5_6 = NULL;
+		audioRendererFilter7_8 = NULL;
+		audioRendererFilter9_10 = NULL;
+		audioRendererFilter11_12 = NULL;
+		audioRendererFilter13_14 = NULL;
+		audioRendererFilter15_16 = NULL;
+		audioRendererFilter17_18 = NULL;
+		//270117 TMS: And here we are clearing the error string
+		AudioGraphError = "";
+
 		rawBuffer = NULL;
 
         timeFormat = TIME_FORMAT_MEDIA_TIME;
@@ -186,6 +306,7 @@ class DirectShowHapVideo : public ISampleGrabberCB {
 		if (hr == S_OK){
 
 			long latestBufferLength = pSample->GetActualDataLength();
+			
 			//printf("Buffer len %i %i\n", (int)latestBufferLength, (int)videoSize);
 			//printf("Expected len %i\n", width * height / 2);
 
@@ -224,7 +345,7 @@ class DirectShowHapVideo : public ISampleGrabberCB {
 
 				bNewPixels = true;
 
-                this->cond.broadcast();
+                //this->cond.broadcast();
 
 				//this is just so we know if there is a new frame
 				frameCount++;
@@ -244,10 +365,309 @@ class DirectShowHapVideo : public ISampleGrabberCB {
     	return E_NOTIMPL;
     }
 
+	//270117 TMS: Procedure for connecting the audio pins for the audio filters and the AVI splitter. This procedure returns false on error
+	bool ConnectAudioFilterPins(IPin *AudioOutputPin, IPin *AudioRenderPin)
+	{
+		bool success = false;
+
+		this->connectPins(AudioOutputPin, AudioRenderPin, success);
+
+		AudioOutputPin->Release();
+		AudioRenderPin->Release();
+		
+		return success;
+	}
+
+	//270117 TMS: Utility function to convert string to wide char
+	BSTR StrConvertToBSTR(string Str)
+	{
+		int wslen = MultiByteToWideChar(CP_ACP, 0 /* no flags */,
+			Str.data(), Str.length(),
+			NULL, 0);
+
+		BSTR wsdata = SysAllocStringLen(NULL, wslen);
+		MultiByteToWideChar(CP_ACP, 0 /* no flags */,
+			Str.data(), Str.length(),
+			wsdata, wslen);
+		return wsdata;
+	}
+
+	//270117 TMS: Utility function to compare wide char string
+	bool Bstr_Compare(BSTR bstrFilter, BSTR bstrDevice)
+	{
+		char Filter[4096];
+		char Device[4096];
+		sprintf_s(Filter, "%ls", bstrFilter);
+		sprintf_s(Device, "%ls", bstrDevice);
+
+		//Af the Openframeworks settings file does removed double spaces - the we need to do the same with the listed devices.
+		string sFilter(Filter);
+		string sFilterNoDoubleSpaces;
+
+		char ch = '.';
+		for (int i = 0; i < sFilter.length(); i++)
+		{
+			if (sFilter[i] == ' ')
+			{
+				if (ch != ' ')
+				{
+					sFilterNoDoubleSpaces += sFilter[i];
+				}
+			}
+			else
+			{
+				sFilterNoDoubleSpaces += sFilter[i];
+			}
+			ch = sFilter[i];
+		}
+		sFilter = sFilterNoDoubleSpaces;
+
+		string sDevice(Device);
+
+		if (sFilter.compare(sDevice)==0)
+		{
+			return true;
+		}
+		return false;
+	}
+
+	//270117 TMS: Function to print out the device names - pretty good for tests
+	void PrintDeviceName(BSTR DeviceName)
+	{
+		char str[4096];
+		sprintf(str, "Got filter: >%ls<", DeviceName);
+
+		cout << str;
+	}
+
+	//270117 TMS: Procedure to lookup the device based on the device name. This procedure returns the attched filter, and returns null_ptr on error
+	IBaseFilter* GetDSDeviceByName(BSTR bstrDeviceName, IBaseFilter *Filter)
+	{
+		ICreateDevEnum* devices;
+		if (CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER, IID_ICreateDevEnum, (LPVOID*)&devices) == S_OK)
+		{
+			IEnumMoniker* enumerator;
+			//AM_KSCATEGORY_RENDER - WDM devices don't works in open frameworks
+			if (devices->CreateClassEnumerator(CLSID_AudioRendererCategory, &enumerator, 0) == S_OK)
+			{
+				IMoniker* moniker;
+				while (enumerator->Next(1, &moniker, NULL) == S_OK)
+				{
+					IPropertyBag* properties;
+					if (moniker->BindToStorage(NULL, NULL, IID_IPropertyBag, (void**)&properties) == S_OK)
+					{
+						VARIANT variant;
+						VariantInit(&variant);
+						if (properties->Read(L"FriendlyName", &variant, 0) == S_OK)
+						{
+							//PrintDeviceName(variant.bstrVal); //For displaying the device name
+							if (Bstr_Compare(variant.bstrVal, bstrDeviceName))
+							{
+								hr = moniker->BindToObject(NULL, NULL, IID_IBaseFilter, (void**)&Filter);//Instantiate the device
+								if (hr != S_OK)
+								{
+									cout << "Error calling Device_Init";
+								}
+								VariantClear(&variant);
+								properties->Release();
+								moniker->Release();
+								enumerator->Release();
+								devices->Release();
+								return Filter;
+							}
+						}
+						VariantClear(&variant);
+						properties->Release();
+					}
+					moniker->Release();
+				}
+				enumerator->Release();
+			}
+			devices->Release();
+		}
+		cout << "Error filter not found!!!\r\n";
+		return nullptr;
+	}
+
+	//270117 TMS: Procedure for adding an audio DS filter to the graph, takes the output ID and creates an reference for the audio output filter. This procedure returns false on error
+	bool AddAudioFilterToGraph(int AudioOutputID, IPin *AudioSourcePin)
+	{
+		//if (AudioOutputID > 0)return true;
+		HRESULT hr = S_FALSE;
+		bool Success = true; //Needs to be initialized as true - as only set false due to error
+
+		BSTR bstrDeviceName;
+		IBaseFilter **AudioOutputFilter;
+
+		//Create the audio render filter
+		switch (AudioOutputID)
+		{
+			case 0:
+				bstrDeviceName = StrConvertToBSTR(SoundRender1_2Name);
+				cout << " Using device: " + SoundRender1_2Name + " ";
+				AudioOutputFilter = &this->audioRendererFilter1_2;
+				break;
+			case 1:
+				bstrDeviceName = StrConvertToBSTR(SoundRender3_4Name);
+				cout << " Using device: " + SoundRender3_4Name + " ";
+				AudioOutputFilter = &this->audioRendererFilter3_4;
+				break;
+			case 2:
+				bstrDeviceName = StrConvertToBSTR(SoundRender5_6Name);
+				cout << " Using device: " + SoundRender5_6Name + " ";
+				AudioOutputFilter = &this->audioRendererFilter5_6;
+				break;
+			case 3:
+				bstrDeviceName = StrConvertToBSTR(SoundRender7_8Name);
+				cout << " Using device: " + SoundRender7_8Name + " ";
+				AudioOutputFilter = &this->audioRendererFilter7_8;
+				break;
+			case 4:
+				bstrDeviceName = StrConvertToBSTR(SoundRender9_10Name);
+				cout << " Using device: " + SoundRender9_10Name + " ";
+				AudioOutputFilter = &this->audioRendererFilter9_10;
+				break;
+			case 5:
+				bstrDeviceName = StrConvertToBSTR(SoundRender11_12Name);
+				cout << " Using device: " + SoundRender11_12Name + " ";
+				AudioOutputFilter = &this->audioRendererFilter11_12;
+				break;
+			case 6:
+				bstrDeviceName = StrConvertToBSTR(SoundRender13_14Name);
+				cout << " Using device: " + SoundRender13_14Name + " ";
+				AudioOutputFilter = &this->audioRendererFilter13_14;
+				break;
+			case 7:
+				bstrDeviceName = StrConvertToBSTR(SoundRender15_16Name);
+				cout << " Using device: " + SoundRender15_16Name + " ";
+				AudioOutputFilter = &this->audioRendererFilter15_16;
+				break;
+			case 8:
+				bstrDeviceName = StrConvertToBSTR(SoundRender17_18Name);
+				cout << " Using devic6e: " + SoundRender17_18Name + " ";
+				AudioOutputFilter = &this->audioRendererFilter17_18;
+				break;
+			default:
+				AudioGraphError = "Error invalid ID when initializing audio filter for graph.";
+
+				cout << AudioGraphError;
+				cout << "\r\n";
+				return false;
+				break;
+		}
+		
+		if (!Success)
+		{
+			AudioGraphError = "Error adding the filter to the graph";
+		}
+		if (FAILED(hr)) 
+		{
+			AudioGraphError = "Error - can't initialize filter";
+			
+			return false;
+		}
+
+		//Setup the audio output filter
+		*AudioOutputFilter=GetDSDeviceByName(bstrDeviceName, *AudioOutputFilter);
+		if (AudioOutputFilter == nullptr)
+		{
+			cout << "Error setting up audio graph!!\r\n";
+			return false;
+		}
+
+		this->addFilter(*AudioOutputFilter, bstrDeviceName, Success);//L"DVS Channels  1-2", Success);// bstrDeviceName, Success);
+		if (!Success)
+		{
+			cout << "Error adding device to graph";
+			return false;
+		}
+	
+		//Connect the pins
+		IPin *audioInputPin = this->getInputPin(*AudioOutputFilter, Success);
+		if (Success)
+		{
+			ConnectAudioFilterPins(AudioSourcePin, audioInputPin);
+		}
+		else
+		{
+			AudioGraphError = "Error connecting the input pin to the output pin";
+			cout << AudioGraphError;
+			cout << "\r\n";
+			
+			return false;
+		}
+		
+		return true;
+	}
+
+	//270117 TMS: String for holding audio graph errors
+	string AudioGraphError;
+	//270117 TMS: Procedure for setting up the audio graph for multiple audio outputs. This procedure returns false on error.
+	bool SetupAudioGraph(IBaseFilter *AVISplitter)
+	{
+		AudioGraphError = "Not yet initialized";
+
+		//Here we are searching for the audio output pins on the AVISplitter filter. Each time we do find an audio output pin, then an audio filter is added, and connected to the audio output filter
+		IEnumPins * enumPins;
+		IPin * pin;
+		ULONG fetched;
+		PIN_INFO pinfo;
+		HRESULT hr;
+		int AudioOutputID = 0; //The current audio output we are processing
+		bool success = false;
+
+		AVISplitter->EnumPins(&enumPins);
+		enumPins->Reset();
+
+		while (enumPins->Next(1, &pin, &fetched) == S_OK) {
+
+			pin->QueryPinInfo(&pinfo);
+			pinfo.pFilter->Release();
+
+			if (pinfo.dir == PINDIR_OUTPUT) 
+			{
+				// check to see if avi splitter has audio output
+				IEnumMediaTypes * pEnum = NULL;
+				AM_MEDIA_TYPE * pmt = NULL;
+				BOOL bFound = false;
+
+				hr = pin->EnumMediaTypes(&pEnum);
+
+				while (pEnum->Next(1, &pmt, NULL) == S_OK) {
+
+					if (pmt->majortype == MEDIATYPE_Audio) {
+						cout << "Opening audio output for channels: ";
+						cout << AudioOutputID*2+1;
+						cout << "-";
+						cout << AudioOutputID * 2 + 2;
+						
+						if (!AddAudioFilterToGraph(AudioOutputID, pin))
+						{
+							AudioGraphError = "Error adding the audio filter to the graph: " + AudioGraphError;
+							cout << AudioGraphError;
+							cout << "\r\n";
+							enumPins->Release();
+
+							return false;
+						}
+						cout << " ..Done!\r\n";
+						AudioOutputID++;
+					}
+				}
+			}
+		}
+		enumPins->Release();
+
+		return true;
+	}
+
 	bool loadMovieManualGraph(string path) {
 
         //Release all the filters etc.
 		tearDown();
+
+		//270117 TMS: Load the setting from the settings file
+		GetAudioRenderSettings();
 
         bool success = true;
         
@@ -379,11 +799,16 @@ class DirectShowHapVideo : public ISampleGrabberCB {
         aviSplitterOutput->Release();
         rawSampleGrabberInput->Release();
 
-		// check if file contains audio
+		//270117 TMS: Setups the audio graph
+		SetupAudioGraph(aviSplitterFilter);
 
+		//270116 TMS: Removed - the audio graph are now setup using SetupAudioGraph(aviSplitterFilter);
+		/*
+		// check if file contains audio
 		IPin * aviSplitterAudioOutput = NULL;
 
 		if (getContainsAudio(aviSplitterFilter, aviSplitterAudioOutput)){
+			
             this->createAudioRendererFilter(success);
             this->addFilter(this->audioRendererFilter, L"SoundRenderer", success);
 
@@ -393,7 +818,7 @@ class DirectShowHapVideo : public ISampleGrabberCB {
 
 			aviSplitterAudioOutput->Release();
 			audioInputPin->Release();
-		}
+		}*/
 
         IPin * rawSampleGrabberOutput = this->getOutputPin(this->rawSampleGrabberFilter, success);
 
@@ -679,6 +1104,14 @@ class DirectShowHapVideo : public ISampleGrabberCB {
             success = false;
 		}
 		else{
+			
+			if (videoSize == 0) {
+
+				ofLogWarning("ofxDSHapVideoPlayer") << "Video frame size not encoded in file header";
+
+				videoSize =  width * height * (this->textureFormat == HapTextureFormat_RGBA_DXT5 ? 4 : 3);
+			}
+			
 			this->rawBuffer = new unsigned char[videoSize];
 		}
 
@@ -1099,6 +1532,8 @@ class DirectShowHapVideo : public ISampleGrabberCB {
 		return hr;
 	}
 
+	/*
+
     Poco::Mutex mutex;
     Poco::Condition cond;
 
@@ -1110,7 +1545,7 @@ class DirectShowHapVideo : public ISampleGrabberCB {
         return this->cond;
     }
 
-
+	*/
 
 	protected:
 
@@ -1130,6 +1565,17 @@ class DirectShowHapVideo : public ISampleGrabberCB {
 	IBaseFilter * aviSplitterFilter;
 	IBaseFilter * nullRendererFilter;
 	IBaseFilter * audioRendererFilter;
+
+	//270117 TMS: Added more audio render filters, to support multiple audio outputs
+	IBaseFilter * audioRendererFilter1_2;
+	IBaseFilter * audioRendererFilter3_4;
+	IBaseFilter * audioRendererFilter5_6;
+	IBaseFilter * audioRendererFilter7_8;
+	IBaseFilter * audioRendererFilter9_10;
+	IBaseFilter * audioRendererFilter11_12;
+	IBaseFilter * audioRendererFilter13_14;
+	IBaseFilter * audioRendererFilter15_16;
+	IBaseFilter * audioRendererFilter17_18;
 
     GUID timeFormat;
 	REFERENCE_TIME timeNow;				// Used for FF & REW of movie, current time
@@ -1206,12 +1652,14 @@ bool ofxDSHapVideoPlayer::loadMovie(string path) {
 
 			 textureFormat = player->getHapTextureFormat();
 
+			 //tex.texData.glInternalFormat
+
 			 if (textureFormat == HapTextureFormat_RGB_DXT1){
-				 texData.glTypeInternal = GL_COMPRESSED_RGB_S3TC_DXT1_EXT; 
+				 texData.glTypeInternal = GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
 				 pix.allocate(width, height, OF_IMAGE_COLOR);
 			 }
 			 else if (textureFormat == HapTextureFormat_RGBA_DXT5){
-				 texData.glTypeInternal = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT; 
+				 texData.glTypeInternal = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 				 pix.allocate(width, height, OF_IMAGE_COLOR_ALPHA);
 			 }
 			 else {
@@ -1270,6 +1718,7 @@ bool ofxDSHapVideoPlayer::loadMovie(string path) {
              ofxHapPlayerFragmentShader = "#version 400\n" STRINGIFY(
 				uniform sampler2D src_tex0;
                 in vec2 v_texcoord;
+				out vec4 v_fragColor;
                 uniform float width;
                 uniform float height;
 			    const vec4 offsets = vec4(-0.50196078431373, -0.50196078431373, 0.0, 0.0);
@@ -1282,7 +1731,7 @@ bool ofxDSHapVideoPlayer::loadMovie(string path) {
 					float Cg = CoCgSY.y / scale;
 					float Y = CoCgSY.w;
 					vec4 rgba = vec4(Y + Co - Cg, Y + Cg, Y - Co - Cg, 1.0);
-					gl_FragColor = rgba;
+					v_fragColor = rgba;
 				});
          }
          else
@@ -1358,6 +1807,7 @@ void ofxDSHapVideoPlayer::update(){
 }
 
 void ofxDSHapVideoPlayer::waitUpdate(long milliseconds){
+	/*
     if (player && player->isLoaded()){
         Poco::Mutex& mutex = this->player->getMutex();
         mutex.lock();
@@ -1369,6 +1819,7 @@ void ofxDSHapVideoPlayer::waitUpdate(long milliseconds){
         mutex.unlock();
 		player->update();
 	}
+	*/
 }
 
 void ofxDSHapVideoPlayer::writeToTexture(ofTexture &texture) {
@@ -1395,7 +1846,7 @@ void ofxDSHapVideoPlayer::writeToTexture(ofTexture &texture) {
         //dataLength = player->getBufferSize(); 
         glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPRESSED_IMAGE_SIZE, &dataLength);
     }
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, texData.glTypeInternal, dataLength, pix.getPixels());
+	glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, texData.glTypeInternal, dataLength, pix.getPixels());
 
     GLenum err = glGetError();
 
@@ -1412,9 +1863,9 @@ void ofxDSHapVideoPlayer::writeToTexture(ofTexture &texture) {
 };
 
 
-void ofxDSHapVideoPlayer::draw(int x, int y, int w, int h){
 
-	ofSetColor(255);
+
+void ofxDSHapVideoPlayer::draw(int x, int y, int w, int h){
 
 	if (textureFormat == HapTextureFormat_YCoCg_DXT5) shader.begin();
 
@@ -1422,7 +1873,6 @@ void ofxDSHapVideoPlayer::draw(int x, int y, int w, int h){
 
 	if (textureFormat == HapTextureFormat_YCoCg_DXT5) shader.end();
 }
-
 
 void ofxDSHapVideoPlayer::play(){
 	if( player && player->isLoaded() ){
@@ -1449,26 +1899,28 @@ void ofxDSHapVideoPlayer::stop(){
 	}
 }		
 
-bool ofxDSHapVideoPlayer::isFrameNew(){
+bool ofxDSHapVideoPlayer::isFrameNew() {
 	return ( player && player->isFrameNew() ); 
 }
 
-unsigned char * ofxDSHapVideoPlayer::getPixels(){
-	return pix.getPixels();
-}
-	
-ofPixelsRef ofxDSHapVideoPlayer::getPixelsRef(){
-	return pix; 
+
+unsigned char* ofxDSHapVideoPlayer::getPixels(){
+	return pix.getPixels(); 
 }
 
-float ofxDSHapVideoPlayer::getWidth(){
+ofPixelsRef ofxDSHapVideoPlayer::getPixelsRef(){
+	return pix;
+}
+
+
+float ofxDSHapVideoPlayer::getWidth() {
 	if( player && player->isLoaded() ){
 		return player->getWidth();
 	}
 	return 0.0; 
 }
 
-float ofxDSHapVideoPlayer::getHeight(){
+float ofxDSHapVideoPlayer::getHeight() {
 	if( player && player->isLoaded() ){
 		return player->getHeight();
 	}
@@ -1479,15 +1931,15 @@ ofShader ofxDSHapVideoPlayer::getShader() {
     return this->shader;
 }
 	
-bool ofxDSHapVideoPlayer::isPaused(){
+bool ofxDSHapVideoPlayer::isPaused() {
 	return ( player && player->isPaused() ); 
 }
 
-bool ofxDSHapVideoPlayer::isLoaded(){
+bool ofxDSHapVideoPlayer::isLoaded()  {
 	return ( player && player->isLoaded() ); 
 }
 
-bool ofxDSHapVideoPlayer::isPlaying(){
+bool ofxDSHapVideoPlayer::isPlaying()  {
 	return ( player && player->isPlaying() ); 
 }	
 
@@ -1495,7 +1947,7 @@ bool ofxDSHapVideoPlayer::setPixelFormat(ofPixelFormat pixelFormat){
 	return (pixelFormat == OF_PIXELS_RGBA);
 }
 
-ofPixelFormat ofxDSHapVideoPlayer::getPixelFormat(){
+ofPixelFormat ofxDSHapVideoPlayer::getPixelFormat()  {
 	return OF_PIXELS_RGBA; 
 }
 		
@@ -1550,7 +2002,7 @@ void ofxDSHapVideoPlayer::setLoopState(ofLoopType state){
 			player->setLoop(false);
 		}
 		else if( state == OF_LOOP_NORMAL ){
-			player->setLoop(false);
+			player->setLoop(true);
 		}else{
 			ofLogError("ofDirectShowPlayer") << " cannot set loop of type palindrome " << endl;
 		}
@@ -1563,21 +2015,21 @@ void ofxDSHapVideoPlayer::setSpeed(float speed){
 	}
 }
 	
-int	ofxDSHapVideoPlayer::getCurrentFrame(){
+int	ofxDSHapVideoPlayer::getCurrentFrame() {
 	if( player && player->isLoaded() ){
 		return player->getCurrentFrame();
 	}
 	return 0; 
 }
 
-int	ofxDSHapVideoPlayer::getTotalFrames(){
+int	ofxDSHapVideoPlayer::getTotalFrames() {
 	if( player && player->isLoaded() ){
 		return player->getTotalFrames();
 	}
 	return 0; 
 }
 
-ofLoopType ofxDSHapVideoPlayer::getLoopState(){
+ofLoopType ofxDSHapVideoPlayer::getLoopState() {
 	if( player ){
 		if( player->isLooping() ){
 			return OF_LOOP_NORMAL;
@@ -1624,3 +2076,4 @@ ofxDSHapVideoPlayer::HapType ofxDSHapVideoPlayer::getHapType() {
         return HapType::HAPQ;
     }
 }
+
